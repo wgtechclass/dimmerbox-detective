@@ -233,3 +233,16 @@
 .reason-lock { text-align: center; color: var(--ink-soft); padding: 20px 10px; }
 .reason-q { margin-bottom: 14px; }
 .evidence-pick { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+
+@media (max-width: 1180px), (max-height: 820px) {
+  .workbench {
+    height: auto;
+    min-height: 0;
+    padding: 8px;
+    overflow: visible;
+    align-items: flex-start;
+  }
+  .stage {
+    width: 100%;
+  }
+}

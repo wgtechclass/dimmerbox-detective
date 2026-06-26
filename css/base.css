@@ -66,14 +66,56 @@ h1, h2, h3 { font-family: var(--font-serif); }
 }
 .col-body { padding: 12px 14px; overflow-y: auto; min-height: 0; flex: 1; }
 
-/* 平板 */
-@media (max-width: 1024px) {
-  .level-cols { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; }
-  .col-workbench { grid-column: 1 / -1; }
+/* 平板、手機與矮螢幕：整頁可滑，避免 100dvh 鎖高裁切內容 */
+@media (max-width: 1180px), (max-height: 820px) {
+  html, body { min-height: 100%; height: auto; }
+  #app { min-height: 100dvh; height: auto; overflow-y: auto; }
+  .page {
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+  }
+  .level {
+    min-height: 100dvh;
+    height: auto;
+    display: block;
+  }
+  .level-topbar {
+    position: sticky;
+    top: 0;
+    flex-wrap: wrap;
+  }
+  .level-cols {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+    min-height: auto;
+  }
+  .col,
+  .col-workbench {
+    min-height: auto;
+    grid-column: auto;
+  }
+  .col-body {
+    flex: none;
+    overflow: visible;
+  }
+  .col-workbench .col-body {
+    min-height: 0;
+  }
 }
-/* 手機：單欄堆疊不壞版（非優先） */
+
 @media (max-width: 680px) {
-  .level { height: auto; }
-  .level-cols { grid-template-columns: 1fr; }
-  .col { min-height: 320px; }
+  .level-topbar {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .level-topbar strong {
+    font-size: .95rem;
+    line-height: 1.35;
+  }
+  .level-cols {
+    padding: 8px;
+    gap: 10px;
+  }
 }
