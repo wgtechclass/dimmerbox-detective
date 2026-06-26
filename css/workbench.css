@@ -241,6 +241,7 @@
     padding: 8px;
     overflow: visible;
     align-items: flex-start;
+    container-type: inline-size;
   }
   .stage {
     width: 100%;
