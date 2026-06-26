@@ -1,0 +1,235 @@
+/* 實驗工作台：置中一個固定 16:9 互動舞台（所有元件/接點/標籤/接線共用同一套舞台座標） */
+.workbench {
+  position: relative;
+  height: 100%; min-height: 300px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.2%;
+  overflow: hidden;
+  container-type: size;
+}
+/* 固定 16:9 舞台：在寬高兩方向都盡量塞滿、又保持 16:9 → 內部用 % 與 cqw，接點不跑位 */
+.stage {
+  position: relative;
+  width: min(100%, 177.78cqh); aspect-ratio: 16 / 9;
+  container-type: size;
+  border-radius: var(--r-sm);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,.4), transparent 50%),
+    repeating-linear-gradient(45deg, rgba(150,120,70,.05) 0 6px, transparent 6px 12px),
+    var(--board);
+  overflow: hidden;
+}
+.wire-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+.wire-svg path { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+.wire-flow { stroke-dasharray: 8 10; animation: flow .7s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -18; } }
+
+/* 元件（釘在板上的證物） */
+.part {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  text-align: center;
+}
+.scene-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 0;
+  pointer-events: none;
+}
+.scene-led-glow {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity .25s, transform .25s;
+  background: radial-gradient(circle, rgba(255,238,155,.98) 0%, rgba(255,190,55,.75) 38%, rgba(255,170,40,0) 72%);
+  pointer-events: none;
+}
+.scene-led-glow.on { opacity: var(--led-bright, .95); transform: translate(-50%, -50%) scale(calc(0.6 + 0.45 * var(--led-bright, 1))); }
+.scene-led-glow.dim { opacity: .55; transform: translate(-50%, -50%) scale(.72); }
+.scene-led-glow.warn {
+  opacity: .95;
+  transform: translate(-50%, -50%) scale(1.12);
+  background: radial-gradient(circle, #fff 0%, rgba(255,240,170,.9) 45%, rgba(255,200,60,0) 75%);
+  animation: overbright .28s steps(2) infinite;
+}
+.scene-led-glow.broken { opacity: 0; }
+.scene-led-glow.flicker { opacity: .9; animation: flicker .26s steps(1) infinite; }
+.part img { width: 100%; height: auto; pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,.2)); position: relative; z-index: 1; }
+.workbench-tool-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 12px;
+}
+.part-led { position: absolute; }
+/* 發光圓盤：墊在透明 LED 燈殼後方，靠燈殼透出來呈現「亮」 */
+.led-glow {
+  position: absolute; left: 50%; top: 19%; transform: translate(-50%, -50%);
+  width: 135%; aspect-ratio: 1; border-radius: 50%; z-index: 0;
+  opacity: 0; transition: opacity .25s, transform .25s;
+  background: radial-gradient(circle, rgba(255,232,140,.98) 0%, rgba(255,190,55,.7) 38%, rgba(255,170,40,0) 72%);
+  pointer-events: none;
+}
+.part-led.on .led-glow { opacity: var(--led-bright, 1); transform: translate(-50%,-50%) scale(calc(0.6 + 0.45 * var(--led-bright, 1))); }
+.part-led.dim .led-glow { opacity: .6; transform: translate(-50%,-50%) scale(.72); }
+.part-led.warn .led-glow { opacity: 1; transform: translate(-50%,-50%) scale(1.25);
+  background: radial-gradient(circle, #fff 0%, rgba(255,240,170,.9) 45%, rgba(255,200,60,0) 75%);
+  animation: overbright .28s steps(2) infinite; }
+.part-led.on img { filter: drop-shadow(0 0 10px rgba(255,200,70,.6)); }
+.part-led.warn img { filter: brightness(1.15); }
+.part-led.broken img { filter: grayscale(1) brightness(.78); }
+.part-led.broken .led-glow { opacity: 0; }
+.part-led.flicker .led-glow { opacity: 1; animation: flicker .26s steps(1) infinite; }
+@keyframes overbright { 0% { opacity: .7; } 100% { opacity: 1; } }
+@keyframes flicker { 0% { opacity: .95; } 30% { opacity: .15; } 55% { opacity: .8; } 80% { opacity: .25; } 100% { opacity: .9; } }
+
+/* 電壓拉條 */
+.slider-readout { font-family: var(--font-serif); font-weight: 900; font-size: 1.5rem; color: var(--brand-dark); text-align: center; }
+.vslider { width: 100%; margin: 6px 0 2px; accent-color: var(--clue); height: 6px; }
+.slider-ticks { display: flex; justify-content: space-between; font-size: .72rem; color: var(--ink-soft); }
+
+/* 推理選項列 */
+.pick-row { display: flex; gap: 8px; align-items: center; cursor: pointer; padding: 7px 8px; border-radius: 8px; border: 1px solid transparent; }
+.pick-row:hover { background: var(--paper-2); border-color: var(--line-soft); }
+
+/* 接點熱區：尺寸用 cqw（隨舞台等比例縮放，永遠貼合元件、不跑位） */
+.hotspot {
+  position: absolute; transform: translate(-50%, -50%);
+  width: 3.8cqw; height: 3.8cqw; min-width: 20px; min-height: 20px; border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  border: 0.42cqw solid rgba(63,94,84,.92);
+  z-index: 4; cursor: crosshair;
+  transition: transform .1s, box-shadow .12s, background .12s;
+}
+.hotspot::before { content: ""; position: absolute; inset: -38%; border-radius: inherit; }
+.hotspot::after { content: none; }
+.hotspot.shape-square {
+  width: 2.5cqw;
+  height: 2.5cqw;
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 18%;
+  border-width: .34cqw;
+}
+.hotspot.shape-square::before { inset: -74%; }
+.hotspot:hover { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 0 6px rgba(63,94,84,.2); }
+.hotspot.is-armed { background: rgba(200,70,44,.1); border-color: var(--clue); box-shadow: 0 0 0 6px rgba(200,70,44,.25); }
+.hotspot.is-linked { border-color: var(--ok); }
+
+/* 外拉式教學端子與 callout 指示線 */
+.terminal-callouts {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.terminal-callouts line {
+  stroke: rgba(46, 42, 36, .62);
+  stroke-width: .34;
+  stroke-linecap: round;
+  stroke-dasharray: 1.1 1.05;
+}
+.hotspot.is-extended,
+.teaching-terminal {
+  background: rgba(255,248,232,.08);
+  border-color: rgba(164,122,16,.94);
+  box-shadow: 0 0 0 .3cqw rgba(255,255,255,.58), 0 .22cqw .58cqw rgba(60,48,30,.22);
+}
+.teaching-terminal {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 3.4cqw;
+  height: 3.4cqw;
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 50%;
+  border: .38cqw solid var(--gold-dark);
+  z-index: 4;
+  pointer-events: none;
+}
+.teaching-terminal::after {
+  content: none;
+}
+.teaching-terminal.shape-square {
+  width: 2.35cqw;
+  height: 2.35cqw;
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 18%;
+  border-width: .32cqw;
+}
+.hotspot.terminal-led,
+.teaching-terminal.terminal-led {
+  width: 2.15cqw;
+  height: 2.15cqw;
+  min-width: 13px;
+  min-height: 13px;
+  border-width: .28cqw;
+  background: rgba(255,255,255,.02);
+}
+.hotspot.terminal-led::before { inset: -15%; }
+.teaching-terminal.terminal-led.shape-square,
+.hotspot.terminal-led.shape-square {
+  width: 2.05cqw;
+  height: 2.05cqw;
+  min-width: 13px;
+  min-height: 13px;
+}
+
+/* 接點標註：附著在接點上、無外框（靠 halo 陰影），跟著接點走不錯位 */
+.hs-label {
+  position: absolute; z-index: 4;
+  font-weight: 800; font-size: 1.85cqw; color: #fff;
+  text-shadow: var(--label-halo);
+  white-space: nowrap; pointer-events: none;
+}
+.hs-label.big { font-size: 2.25cqw; font-weight: 900; }
+.hs-label.right { left: calc(100% + 0.65cqw); top: 50%; transform: translateY(-50%); }
+.hs-label.left  { right: calc(100% + 0.65cqw); top: 50%; transform: translateY(-50%); }
+.hs-label.up    { bottom: calc(100% + 0.55cqw); left: 50%; transform: translateX(-50%); }
+.hs-label.down  { top: calc(100% + 0.55cqw); left: 50%; transform: translateX(-50%); }
+.wire-svg circle { filter: drop-shadow(0 0 4px rgba(255,255,255,.9)); }
+/* 指示線（用細線/圓點指位，不用方框） */
+.label-pin { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--clue); transform: translate(-50%,-50%); z-index: 4; }
+
+/* 子母畫面：放大鏡檢視 */
+.inspector {
+  position: absolute; right: 12px; bottom: 12px; z-index: 6;
+  width: 150px;
+  background: var(--paper); border: 2px solid var(--brand);
+  border-radius: var(--r-sm); box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+.inspector-head { font-size: .78rem; font-weight: 700; color: #fff; background: var(--brand); padding: 4px 8px; display: flex; justify-content: space-between; }
+.inspector-body { padding: 8px; background: #fff; min-height: 110px; display: grid; place-items: center; }
+.inspector-body img { max-height: 120px; }
+.inspector-hint { font-size: .72rem; color: var(--ink-soft); text-align: center; padding: 6px; }
+
+/* 亮度條 */
+.bright-bar { display: flex; gap: 4px; align-items: flex-end; height: 26px; }
+.bright-bar i { width: 10px; background: var(--gold); border-radius: 2px; display: block; }
+
+/* 實驗紀錄表 */
+.recordbook { font-size: .9rem; }
+.rec-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--line-soft); }
+.rec-cond { color: var(--ink); }
+.rec-obs { font-weight: 700; }
+.rec-empty { color: var(--ink-soft); font-style: italic; padding: 10px 0; }
+.req-list { list-style: none; margin-top: 10px; }
+.req-list li { padding: 5px 0 5px 26px; position: relative; color: var(--idle); }
+.req-list li::before { content: "○"; position: absolute; left: 4px; }
+.req-list li.done { color: var(--ok); }
+.req-list li.done::before { content: "✔"; }
+
+/* 推理區鎖定 */
+.reason-lock { text-align: center; color: var(--ink-soft); padding: 20px 10px; }
+.reason-q { margin-bottom: 14px; }
+.evidence-pick { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }

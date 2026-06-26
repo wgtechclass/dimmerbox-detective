@@ -1,0 +1,42 @@
+/* 設計 token：明亮偵探風（米色線索板） */
+:root {
+  /* 背景 / 紙 */
+  --paper: #f6f0e2;
+  --paper-2: #efe6d2;
+  --board: #e7dcc2;
+  --line-soft: #d9ccae;
+
+  /* 文字 */
+  --ink: #2e2a24;
+  --ink-soft: #5c5446;
+
+  /* 偵探主色 / 強調 */
+  --brand: #3f5e54;      /* 墨綠 */
+  --brand-dark: #2c443c;
+  --clue: #c8462c;       /* 偵探紅 */
+  --gold: #c9a227;       /* 徽章金 */
+  --gold-dark: #a8851a;
+
+  /* 狀態 */
+  --ok: #3c8c5a;
+  --idle: #b9b2a2;
+  --warn: #e08a1e;
+
+  /* 接線色 */
+  --wire-pos: #c8462c;
+  --wire-neg: #3f5e54;
+
+  /* 形狀 / 陰影 */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --shadow-card: 0 6px 18px rgba(60, 48, 30, .14);
+  --shadow-pop: 0 18px 50px rgba(40, 30, 16, .30);
+
+  /* 字 */
+  --font-sans: "Noto Sans TC", system-ui, sans-serif;
+  --font-serif: "Noto Serif TC", serif;
+
+  /* 標註無外框：用陰影描邊讓圖上文字清楚 */
+  --label-halo: 0 0 2px #fff, 0 0 4px #fff, 0 1px 3px rgba(0,0,0,.45);
+}

@@ -1,0 +1,79 @@
+/* reset + app shell（鎖視窗高、欄內捲動，畫面不下拉太長） */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255,255,255,.5), transparent 40%),
+    repeating-linear-gradient(0deg, rgba(140,120,80,.025) 0 2px, transparent 2px 4px),
+    var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+#app { height: 100dvh; overflow: hidden; }
+button { font-family: inherit; cursor: pointer; }
+img { display: block; max-width: 100%; }
+h1, h2, h3 { font-family: var(--font-serif); }
+
+/* 通用頁面容器（首頁 / 地圖 / 徽章） */
+.page {
+  height: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(20px, 4vh, 48px) 20px;
+}
+.page-narrow { width: min(960px, 100%); margin: 0 auto; }
+
+/* 關卡三欄骨架：整頁鎖高，捲動只發生在各欄內部 */
+.level {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--board);
+}
+.level-topbar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 18px;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: var(--shadow-card);
+  z-index: 5;
+}
+.level-cols {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1.05fr;
+  gap: 14px;
+  padding: 14px;
+  min-height: 0; /* 讓子欄能內部捲動 */
+}
+.col {
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.col-head {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  padding: 10px 14px;
+  border-bottom: 1px dashed var(--line-soft);
+  color: var(--brand-dark);
+  display: flex; align-items: center; gap: 8px;
+}
+.col-body { padding: 12px 14px; overflow-y: auto; min-height: 0; flex: 1; }
+
+/* 平板 */
+@media (max-width: 1024px) {
+  .level-cols { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; }
+  .col-workbench { grid-column: 1 / -1; }
+}
+/* 手機：單欄堆疊不壞版（非優先） */
+@media (max-width: 680px) {
+  .level { height: auto; }
+  .level-cols { grid-template-columns: 1fr; }
+  .col { min-height: 320px; }
+}
